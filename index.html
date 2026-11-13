@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RPG BATTLE // Executive Engineering Interview Simulation</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          animation: {
+            'subtle-shake': 'subtleShake 0.4s cubic-bezier(.36,.07,.19,.97) both',
+            'slide-up': 'slideUp 0.35s ease-out forwards',
+            'delta-fade': 'deltaFade 1.35s ease-out forwards',
+            'meter-pulse': 'meterPulse 0.65s ease-out',
+            'avatar-nod': 'avatarNod 0.75s cubic-bezier(0.22, 1, 0.36, 1)',
+            'avatar-tilt': 'avatarTilt 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97)',
+            'avatar-listen': 'avatarListen 2.4s ease-in-out infinite',
+            'ring-spin': 'ringSpin 14s linear infinite',
+            'ring-pulse-emerald': 'ringPulseEmerald 1.6s ease-out',
+            'ring-pulse-critical': 'ringPulseCritical 1.6s ease-out',
+          },
+          keyframes: {
+            subtleShake: {
+              '15%, 85%': { transform: 'translate3d(-1.5px, 0, 0)' },
+              '30%, 70%': { transform: 'translate3d(2.5px, 0, 0)' },
+              '50%': { transform: 'translate3d(-3px, 0, 0)' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            deltaFade: {
+              '0%': { opacity: '1', transform: 'translateY(0)' },
+              '70%': { opacity: '1', transform: 'translateY(-10px)' },
+              '100%': { opacity: '0', transform: 'translateY(-18px)' },
+            },
+            meterPulse: {
+              '0%': { boxShadow: '0 0 0 0 rgba(99, 102, 241, 0.45)' },
+              '70%': { boxShadow: '0 0 0 7px rgba(99, 102, 241, 0)' },
+              '100%': { boxShadow: '0 0 0 0 rgba(99, 102, 241, 0)' },
+            },
+            avatarNod: {
+              '0%, 100%': { transform: 'translateY(0) scale(1)' },
+              '30%': { transform: 'translateY(4px) scale(1.015)' },
+              '60%': { transform: 'translateY(-1px) scale(1)' },
+            },
+            avatarTilt: {
+              '0%, 100%': { transform: 'rotate(0deg)' },
+              '35%': { transform: 'rotate(-4.5deg) translateX(-1px)' },
+              '75%': { transform: 'rotate(2deg)' },
+            },
+            avatarListen: {
+              '0%, 100%': { transform: 'scale(1)', opacity: '0.92' },
+              '50%': { transform: 'scale(1.04)', opacity: '1' },
+            },
+            ringSpin: {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' },
+            },
+            ringPulseEmerald: {
+              '0%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.55)' },
+              '70%': { boxShadow: '0 0 0 11px rgba(16, 185, 129, 0)' },
+              '100%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' },
+            },
+            ringPulseCritical: {
+              '0%': { boxShadow: '0 0 0 0 rgba(244, 63, 94, 0.55)' },
+              '70%': { boxShadow: '0 0 0 11px rgba(244, 63, 94, 0)' },
+              '100%': { boxShadow: '0 0 0 0 rgba(244, 63, 94, 0)' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #020617; /* slate-950 */
+      background-image:
+        radial-gradient(circle at 18% 12%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 82% 88%, rgba(16, 185, 129, 0.06) 0%, transparent 45%),
+        linear-gradient(to right, rgba(148, 163, 184, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+
+    .exec-panel {
+      background: rgba(15, 23, 42, 0.8); /* slate-900 glass */
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(51, 65, 85, 0.65);
+      box-shadow: 0 20px 40px -20px rgba(2, 6, 23, 0.85);
+    }
+
+    .exec-subpanel {
+      background: rgba(2, 6, 23, 0.68);
+      border: 1px solid rgba(30, 41, 59, 0.9);
+    }
+
+    .meter-transition {
+      transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.45s ease;
+    }
+
+    /* Smooth SVG Facial Morphing Transitions */
+    .avatar-part {
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
+
+  <!-- TOP EXECUTIVE HEADER BAR -->
+  <header class="w-full border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-slate-900 border border-indigo-500/40 flex items-center justify-center shadow-inner">
+          <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <span class="text-sm sm:text-base font-extrabold tracking-tight text-slate-100">
+              RPG BATTLE
+            </span>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/25">
+              Executive Simulation
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">NebulaScale Systems • SWE Internship Panel</p>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <button id="soundToggleBtn" onclick="toggleAudio()" title="Toggle Subtle Audio Cues"
+          class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition flex items-center gap-1.5 text-xs font-medium cursor-pointer">
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+          </svg>
+          <span class="hidden md:inline">Audio: ON</span>
+        </button>
+
+        <button onclick="openStarModal(true)"
+          class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium transition flex items-center gap-1.5 cursor-pointer">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+          </svg>
+          <span>STAR Helper</span>
+        </button>
+
+        <button onclick="resetGame()"
+          class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium transition cursor-pointer">
+          Reset
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN SIMULATION CONTAINER -->
+  <main id="appContainer" class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6">
+    
+    <!-- ========================================================================
+         SCREEN 1: PRE-INTERVIEW BRIEFING & SETUP SCREEN
+         ======================================================================== -->
+    <section id="introScreen" class="my-auto max-w-4xl mx-auto w-full exec-panel rounded-2xl p-6 sm:p-10 animate-slide-up">
+      
+      <!-- Bold App Header -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/90">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 mb-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+            EXECUTIVE INTERVIEW SIMULATION // 5 ROUNDS
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
+            RPG BATTLE
+          </h1>
+          <p class="text-sm sm:text-base text-slate-400 mt-1">
+            High-Stakes Software Engineering Internship Panel • <span class="text-slate-200 font-medium">NebulaScale Systems</span>
+          </p>
+        </div>
+
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-950 border border-indigo-500/35 flex items-center justify-center shrink-0">
+          <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="py-6 space-y-6 text-slate-300 text-sm leading-relaxed">
+        
+        <!-- INTERVIEWER PERSONA SELECTOR (3 Selectable Tracks) -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-mono uppercase tracking-wider text-indigo-300 font-semibold">
+              Select Your Panel Interviewer Track
+            </label>
+            <span class="text-[11px] font-mono text-slate-500">Customizes Evaluator Focus</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5" id="personaGrid">
+            <!-- Persona 1: Principal Systems Architect -->
+            <button type="button" onclick="selectPersona('architect')" id="personaCard_architect"
+              class="text-left p-4 rounded-xl bg-indigo-950/35 border-2 border-indigo-500 transition-all cursor-pointer flex flex-col justify-between gap-2.5">
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/35">
+                    SYSTEMS TRACK
+                  </span>
+                  <span id="personaCheck_architect" class="w-4 h-4 rounded-full bg-indigo-500 text-white text-[10px] flex items-center justify-center font-bold">✓</span>
+                </div>
+                <div class="text-white font-bold text-sm">Principal Systems Architect</div>
+                <div class="text-[11px] font-mono text-indigo-300 mt-0.5">Evaluator: Julian Varek</div>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                <strong class="text-slate-200">Focus:</strong> Scalability, distributed trade-offs, latency bottlenecks &amp; technical depth.
+              </p>
+            </button>
+
+            <!-- Persona 2: Engineering Manager -->
+            <button type="button" onclick="selectPersona('manager')" id="personaCard_manager"
+              class="text-left p-4 rounded-xl exec-subpanel hover:bg-slate-900/90 border border-slate-800 transition-all cursor-pointer flex flex-col justify-between gap-2.5">
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    LEADERSHIP TRACK
+                  </span>
+                  <span id="personaCheck_manager" class="w-4 h-4 rounded-full border border-slate-700 text-transparent text-[10px] flex items-center justify-center font-bold">✓</span>
+                </div>
+                <div class="text-white font-bold text-sm">Engineering Manager</div>
+                <div class="text-[11px] font-mono text-amber-300 mt-0.5">Evaluator: Marcus Vance</div>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                <strong class="text-slate-200">Focus:</strong> Ownership, cross-team collaboration, incident communication &amp; STAR depth.
+              </p>
+            </button>
+
+            <!-- Persona 3: VP of Engineering -->
+            <button type="button" onclick="selectPersona('vp')" id="personaCard_vp"
+              class="text-left p-4 rounded-xl exec-subpanel hover:bg-slate-900/90 border border-slate-800 transition-all cursor-pointer flex flex-col justify-between gap-2.5">
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    EXECUTIVE TRACK
+                  </span>
+                  <span id="personaCheck_vp" class="w-4 h-4 rounded-full border border-slate-700 text-transparent text-[10px] flex items-center justify-center font-bold">✓</span>
+                </div>
+                <div class="text-white font-bold text-sm">VP of Engineering</div>
+                <div class="text-[11px] font-mono text-emerald-300 mt-0.5">Evaluator: David Thorne</div>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                <strong class="text-slate-200">Focus:</strong> High-pressure execution, customer reliability &amp; measurable product impact.
+              </p>
+            </button>
+          </div>
+        </div>
+
+        <!-- Timed Round & Simulation Mechanics Strip -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="p-3.5 rounded-xl exec-subpanel">
+            <div class="text-indigo-400 font-mono text-[11px] font-semibold uppercase tracking-wider mb-1">Timed Evaluation</div>
+            <p class="text-xs text-slate-400 leading-relaxed">Each round has a <strong class="text-slate-200">difficulty-calibrated countdown</strong> (35s–60s) that auto-advances at 0s.</p>
+          </div>
+          <div class="p-3.5 rounded-xl exec-subpanel">
+            <div class="text-amber-400 font-mono text-[11px] font-semibold uppercase tracking-wider mb-1">STAR Method Twist</div>
+            <p class="text-xs text-slate-400 leading-relaxed">Structure Round 4 via the <strong class="text-amber-300">STAR Helper</strong> for a <strong class="text-emerald-300">+15 HP</strong> composure boost.</p>
+          </div>
+          <div class="p-3.5 rounded-xl exec-subpanel">
+            <div class="text-emerald-400 font-mono text-[11px] font-semibold uppercase tracking-wider mb-1">Executive Dossier</div>
+            <p class="text-xs text-slate-400 leading-relaxed">Receive a ranked evaluation, color-coded coaching cards &amp; full answer retrospective.</p>
+          </div>
+        </div>
+
+        <!-- ACCESSIBLE TOGGLE: 2-SECOND BREATHING & PACING PROMPTS -->
+        <div class="p-4 rounded-xl bg-slate-950/85 border border-indigo-500/25 flex items-center justify-between gap-4">
+          <div class="space-y-0.5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="breathingToggleLabel" class="text-xs sm:text-sm font-semibold text-slate-100">
+                Enable 2-Second Breathing &amp; Pacing Prompts
+              </span>
+              <span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                EMOTIONAL REGULATION
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">
+              Displays a calm 2-second composure reset between questions and behavioral posture/tone reminders.
+            </p>
+          </div>
+
+          <label class="relative inline-flex items-center cursor-pointer shrink-0" aria-labelledby="breathingToggleLabel">
+            <input id="breathingToggleInput" type="checkbox" checked onchange="toggleBreathingPreference()" class="sr-only peer" />
+            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500/50 rounded-full peer border border-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-slate-300 peer-checked:after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 peer-checked:border-indigo-500"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="pt-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/90">
+        <div class="text-xs text-slate-400 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Starting Candidate HP: <strong class="text-slate-200 font-mono">100 / 100</strong> • Skepticism: <strong class="text-slate-200 font-mono">100%</strong></span>
+        </div>
+        <button onclick="startBattle()"
+          class="w-full sm:w-auto px-7 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-lg shadow-indigo-950/60 transition flex items-center justify-center gap-2 cursor-pointer">
+          <span>Start RPG Battle</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SCREEN 2: ACTIVE INTERVIEW ARENA
+         ======================================================================== -->
+    <section id="battleScreen" class="hidden flex-col gap-5 animate-slide-up">
+      
+      <!-- WIDE HIGH-VISIBILITY HP BAR & SKEPTICISM TRACKER HUD -->
+      <div id="playerCard" class="exec-panel rounded-2xl p-4 sm:p-5 border border-slate-800/90 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-xs font-bold tracking-wider">
+              HP
+            </span>
+            <span class="text-sm sm:text-base font-bold text-white">Candidate Composure &amp; Confidence</span>
+            <span id="comboBadge" class="hidden px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/35">
+              2x MOMENTUM
+            </span>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <div id="playerDamagePopup" class="font-mono text-xs font-bold pointer-events-none"></div>
+            <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-950/90 border border-slate-800">
+              <span class="text-[11px] font-mono text-slate-400 uppercase">Skepticism Left:</span>
+              <span id="bossHpText" class="font-mono text-xs sm:text-sm font-bold text-amber-400">100%</span>
+            </div>
+            <div class="text-right">
+              <span id="playerHpText" class="font-mono text-base sm:text-lg font-extrabold text-white">100 / 100 HP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full-Width Prominent HP Bar -->
+        <div id="playerMeterTrack" class="w-full h-4 bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5 shadow-inner">
+          <div id="playerHpBar" class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full meter-transition" style="width: 100%;"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span id="playerStatusText" class="text-slate-400">High executive poise. Ready for panel evaluation.</span>
+          <span id="bossDamagePopup" class="font-mono text-xs font-semibold text-indigo-300 pointer-events-none"></span>
+        </div>
+      </div>
+
+      <!-- PROGRESSIVE INTERVIEW PHASE TRACKER -->
+      <div class="exec-panel rounded-xl px-4 py-3 border border-slate-800/90">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+          <div id="phaseStep1" class="flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all">
+            <span id="phaseDot1" class="w-5 h-5 rounded-full text-[11px] font-mono font-bold flex items-center justify-center shrink-0">1</span>
+            <div class="min-w-0">
+              <div class="text-xs font-semibold truncate">Phase 1: Technical Screening</div>
+              <div class="text-[11px] text-slate-400 truncate">Systems, Big-O &amp; Triage (R1–R3)</div>
+            </div>
+          </div>
+          <div id="phaseStep2" class="flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all">
+            <span id="phaseDot2" class="w-5 h-5 rounded-full text-[11px] font-mono font-bold flex items-center justify-center shrink-0">2</span>
+            <div class="min-w-0">
+              <div class="text-xs font-semibold truncate">Phase 2: Behavioral Assessment</div>
+              <div class="text-[11px] text-slate-400 truncate">STAR Alignment Check (R4)</div>
+            </div>
+          </div>
+          <div id="phaseStep3" class="flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all">
+            <span id="phaseDot3" class="w-5 h-5 rounded-full text-[11px] font-mono font-bold flex items-center justify-center shrink-0">3</span>
+            <div class="min-w-0">
+              <div class="text-xs font-semibold truncate">Phase 3: Final Architecture Review</div>
+              <div class="text-[11px] text-slate-400 truncate">Distributed Defense (R5)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERVIEWER PANEL CARD (Realistic SVG Portrait + Reactive Facial Expressions) -->
+      <div id="bossCard" class="exec-panel rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          
+          <div class="flex items-start sm:items-center gap-4 min-w-0 flex-1">
+            <!-- REALISTIC HUMAN PORTRAIT SVG IN GLASSMORPHIC HUD FRAME -->
+            <div class="flex flex-col items-center shrink-0">
+              <div id="avatarFrame" class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-slate-950/90 border border-indigo-500/45 shadow-[0_0_22px_-4px_rgba(99,102,241,0.45)] transition-all duration-500">
+                <!-- Animated Telemetry Ring -->
+                <svg id="avatarStatusRing" class="absolute inset-0 w-full h-full animate-ring-spin pointer-events-none" viewBox="0 0 96 96">
+                  <circle cx="48" cy="48" r="45" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="16 8 4 8" class="text-indigo-400/75 transition-colors duration-500" />
+                </svg>
+
+                <!-- Inner Realistic Portrait SVG -->
+                <div class="w-full h-full rounded-full overflow-hidden bg-gradient-to-b from-slate-800 to-slate-950 border border-slate-700/80 flex items-center justify-center relative">
+                  <svg id="interviewerSvg" class="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <!-- Realistic Warm-Neutral Skin Shading -->
+                      <radialGradient id="skinShade" cx="46%" cy="38%" r="58%">
+                        <stop offset="0%" stop-color="#f1c6a7" />
+                        <stop offset="68%" stop-color="#dca37e" />
+                        <stop offset="100%" stop-color="#b97d58" />
+                      </radialGradient>
+                      <linearGradient id="neckShade" x1="60" y1="74" x2="60" y2="96" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#b97d58" />
+                        <stop offset="100%" stop-color="#8c583a" />
+                      </linearGradient>
+                      <linearGradient id="blazerGrad" x1="60" y1="84" x2="60" y2="120" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#1e293b" />
+                        <stop offset="100%" stop-color="#090d16" />
+                      </linearGradient>
+                      <linearGradient id="hairGrad" x1="60" y1="14" x2="60" y2="56" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#1e2430" />
+                        <stop offset="100%" stop-color="#0b0f17" />
+                      </linearGradient>
+                      <radialGradient id="avatarAmbient" cx="50%" cy="35%" r="60%">
+                        <stop id="avatarGlowStop" offset="0%" stop-color="#6366f1" stop-opacity="0.25" />
+                        <stop offset="100%" stop-color="#020617" stop-opacity="0" />
+                      </radialGradient>
+                    </defs>
+
+                    <!-- Ambient Studio Backdrop -->
+                    <circle cx="60" cy="60" r="58" fill="url(#avatarAmbient)" class="avatar-part" />
+
+                    <!-- Tailored Executive Blazer & Collar -->
+                    <path d="M16 120 C20 96, 36 88, 60 88 C84 88, 100 96, 104 120 Z" fill="url(#blazerGrad)" stroke="#334155" stroke-width="1.1" />
+                    <!-- Crisp Dress Shirt & Collar -->
+                    <path d="M47 88 L60 107 L73 88 Z" fill="#f1f5f9" />
+                    <path d="M47 88 L54 98 L60 93 L49 86 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.6" />
+                    <path d="M73 88 L66 98 L60 93 L71 86 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.6" />
+                    <!-- Subtle Tie / Executive Lapels -->
+                    <path d="M57.5 94 L62.5 94 L63.5 114 L60 118 L56.5 114 Z" fill="#312e81" />
+                    <path d="M41 89 L54 116 L60 107 L47 88 Z" fill="#0f172a" stroke="#334155" stroke-width="0.8" />
+                    <path d="M79 89 L66 116 L60 107 L73 88 Z" fill="#0f172a" stroke="#334155" stroke-width="0.8" />
+
+                    <!-- Head Group (Animates Nod / Tilt / Active Listening) -->
+                    <g id="avatarHeadGroup" class="avatar-part">
+                      <!-- Neck & Jaw Shadow -->
+                      <rect x="51" y="72" width="18" height="19" rx="6" fill="url(#neckShade)" />
+                      <path d="M51 77 Q60 83 69 77 L69 82 Q60 87 51 82 Z" fill="#6e4229" opacity="0.45" />
+
+                      <!-- Ears -->
+                      <path d="M36.5 49 C33.5 49, 33 58, 36.8 60" fill="#cf936e" stroke="#a66d4b" stroke-width="0.8" />
+                      <path d="M83.5 49 C86.5 49, 87 58, 83.2 60" fill="#cf936e" stroke="#a66d4b" stroke-width="0.8" />
+
+                      <!-- Realistic Human Head & Jaw Contour -->
+                      <path d="M37 46 C37 29, 46 22, 60 22 C74 22, 83 29, 83 46 C83 61, 76 74, 65 78.5 C61.8 79.8, 58.2 79.8, 55 78.5 C44 74, 37 61, 37 46 Z"
+                            fill="url(#skinShade)" stroke="#a66d4b" stroke-width="0.8" />
+
+                      <!-- Subtle Cheekbone & Nasolabial Highlights -->
+                      <ellipse cx="46" cy="57" rx="5.5" ry="3.2" fill="#f7d7c0" opacity="0.32" />
+                      <ellipse cx="74" cy="57" rx="5.5" ry="3.2" fill="#f7d7c0" opacity="0.32" />
+                      <path d="M49 61 Q47.5 65 49 68" stroke="#a66d4b" stroke-width="0.75" stroke-linecap="round" fill="none" opacity="0.45" />
+                      <path d="M71 61 Q72.5 65 71 68" stroke="#a66d4b" stroke-width="0.75" stroke-linecap="round" fill="none" opacity="0.45" />
+
+                      <!-- Textured Executive Hair -->
+                      <path d="M36 47 C34.5 29, 43 18, 60 18 C77 18, 85.5 29, 84 47 C83 36, 78 30, 69 28.5 C58 27, 45 29, 36 47 Z"
+                            fill="url(#hairGrad)" />
+                      <path d="M40 31 C49 23, 66 22, 79 30" stroke="#334155" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.75" />
+
+                      <!-- Realistic Eyes (Sclera, Iris, Pupil, Upper Eyelid) -->
+                      <g id="avatarEyesGroup" class="avatar-part">
+                        <!-- Left Eye -->
+                        <ellipse id="avatarScleraLeft" cx="48.5" cy="48.5" rx="4.6" ry="2.7" fill="#f8fafc" class="avatar-part" />
+                        <circle id="avatarIrisLeft" cx="48.5" cy="48.5" r="2.1" fill="#334155" class="avatar-part" />
+                        <circle cx="48.5" cy="48.5" r="1.05" fill="#020617" />
+                        <circle cx="49.2" cy="47.8" r="0.65" fill="#ffffff" />
+                        <path id="avatarLidLeft" d="M43.8 48.2 Q48.5 45.2 53.2 48.2" stroke="#5c3822" stroke-width="1.25" stroke-linecap="round" fill="none" class="avatar-part" />
+
+                        <!-- Right Eye -->
+                        <ellipse id="avatarScleraRight" cx="71.5" cy="48.5" rx="4.6" ry="2.7" fill="#f8fafc" class="avatar-part" />
+                        <circle id="avatarIrisRight" cx="71.5" cy="48.5" r="2.1" fill="#334155" class="avatar-part" />
+                        <circle cx="71.5" cy="48.5" r="1.05" fill="#020617" />
+                        <circle cx="72.2" cy="47.8" r="0.65" fill="#ffffff" />
+                        <path id="avatarLidRight" d="M66.8 48.2 Q71.5 45.2 76.2 48.2" stroke="#5c3822" stroke-width="1.25" stroke-linecap="round" fill="none" class="avatar-part" />
+                      </g>
+
+                      <!-- Expressive Eyebrows (Dynamic Morphing) -->
+                      <path id="avatarBrowLeft" d="M42.8 43.2 Q48.5 41.6 54.0 43.4" stroke="#1e2430" stroke-width="2.1" stroke-linecap="round" fill="none" class="avatar-part" />
+                      <path id="avatarBrowRight" d="M66.0 43.4 Q71.5 41.6 77.2 43.2" stroke="#1e2430" stroke-width="2.1" stroke-linecap="round" fill="none" class="avatar-part" />
+
+                      <!-- Realistic Nose Bridge & Tip Shading -->
+                      <path d="M60 47 L58.6 58.2 Q60 59.8 61.8 58.2" stroke="#9c6443" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                      <path d="M56.8 58.6 Q60 60.4 63.2 58.6" stroke="#8c5638" stroke-width="0.9" stroke-linecap="round" fill="none" opacity="0.7" />
+
+                      <!-- Expressive Mouth & Subtle Lip Shading -->
+                      <path id="avatarMouth" d="M53.0 66.5 Q60 66.8 67.0 66.5" stroke="#6e3b28" stroke-width="2.0" stroke-linecap="round" fill="none" class="avatar-part" />
+                      <path id="avatarLipShade" d="M55.5 68.4 Q60 69.5 64.5 68.4" stroke="#b57656" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.65" class="avatar-part" />
+                    </g>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Dynamic Micro-Caption Directly Below Avatar -->
+              <span id="avatarReactionBadge" class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 transition-all duration-300 text-center">
+                <span id="avatarReactionDot" class="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"></span>
+                <span id="avatarReactionText">Status: Analytical</span>
+              </span>
+            </div>
+
+            <!-- Interviewer Name, Track Title & Live Prompt -->
+            <div class="min-w-0 flex-1 space-y-1.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 id="interviewerNameTitle" class="font-bold text-white text-base sm:text-lg">
+                  Julian Varek • Principal Systems Architect
+                </h2>
+                <span id="interviewerTrackBadge" class="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                  SYSTEMS TRACK
+                </span>
+              </div>
+              <p id="bossStatusText" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                "Databases don't forgive unthrottled spikes. Show me production-grade architectural trade-offs."
+              </p>
+            </div>
+          </div>
+
+          <!-- QUESTION DIFFICULTY & COUNTDOWN TIMER HUD -->
+          <div class="w-full sm:w-auto flex sm:flex-col items-center sm:items-end justify-between gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-800/80 shrink-0">
+            <div class="flex items-center gap-2">
+              <span id="difficultyBadge" class="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                DIFFICULTY: HARD
+              </span>
+            </div>
+            <div id="timerBox" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-indigo-500/35">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-[11px] font-mono text-slate-400">TIME:</span>
+              <span id="questionTimerText" class="font-mono text-sm font-bold text-white">45s</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ROUND METADATA BAR -->
+      <div class="flex flex-wrap items-center justify-between gap-3 px-1">
+        <div class="flex items-center gap-2.5">
+          <span id="questionCategoryBadge" class="px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 font-mono text-[11px] font-semibold tracking-wide">
+            SYSTEM DESIGN &amp; CACHING
+          </span>
+          <span id="turnCounterText" class="text-xs font-mono text-slate-400">Round 1 of 5</span>
+        </div>
+        <div id="turnDots" class="flex items-center gap-1.5"></div>
+      </div>
+
+      <!-- QUESTION & SCENARIO CARD -->
+      <div id="questionBox" class="exec-panel rounded-2xl p-5 sm:p-8 space-y-6">
+        
+        <!-- Prompt Header -->
+        <div class="space-y-3.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-mono text-slate-400 uppercase tracking-wider">
+              Evaluation Prompt
+            </span>
+
+            <!-- Interactive STAR Helper Trigger -->
+            <button id="inlineStarBtn" onclick="openStarModal(false)"
+              class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/35 text-amber-300 text-xs font-medium transition flex items-center gap-1.5 cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+              </svg>
+              <span>Open STAR Method Helper</span>
+            </button>
+          </div>
+
+          <h3 id="questionTitle" class="text-lg sm:text-xl font-bold text-white leading-snug">
+            Loading scenario...
+          </h3>
+
+          <div id="questionContextBox" class="p-4 rounded-xl exec-subpanel font-mono text-xs sm:text-sm text-slate-300 leading-relaxed"></div>
+        </div>
+
+        <!-- BODY LANGUAGE & TONE SELF-CHECK PILL (Behavioral Round + Toggle ON) -->
+        <div id="postureCheckBadge" class="hidden p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex items-center gap-2.5 text-xs text-indigo-200 animate-slide-up">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span>
+          <span><strong class="font-semibold text-white">Posture &amp; Tone Check:</strong> Uncross shoulders, maintain steady pacing, structure via STAR.</span>
+        </div>
+
+        <!-- STAR Equipped Banner -->
+        <div id="starForgedBanner" class="hidden p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 animate-slide-up">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono font-semibold text-amber-300 uppercase tracking-wide">
+              STAR FRAMEWORK: Applied (+15 HP Bonus Ready)
+            </span>
+            <button onclick="openStarModal(false)" class="text-xs text-amber-300 hover:text-amber-200 underline cursor-pointer">
+              Edit Response
+            </button>
+          </div>
+          <p id="starForgedSummary" class="text-xs text-slate-300 line-clamp-2"></p>
+        </div>
+
+        <!-- Candidate Decision Options -->
+        <div id="optionsContainer" class="grid grid-cols-1 gap-3"></div>
+
+        <!-- Immediate Feedback & Executive Coaching -->
+        <div id="feedbackPanel" class="hidden rounded-xl p-4 sm:p-5 border transition-all space-y-4 animate-slide-up">
+          <div class="flex items-start gap-3.5">
+            <div id="feedbackIcon" class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 font-mono text-sm font-bold">
+              ✓
+            </div>
+            <div class="flex-grow space-y-1.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h4 id="feedbackHeadline" class="font-semibold text-sm sm:text-base">Assessment</h4>
+                <span id="feedbackDeltaBadge" class="px-2.5 py-0.5 rounded-md text-xs font-mono font-semibold">
+                  +10 HP
+                </span>
+              </div>
+              <p id="feedbackExplanation" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+            <span id="autoAdvanceHint" class="text-xs font-mono text-slate-400">
+              Auto-advancing when timer expires, or continue now:
+            </span>
+            <button id="nextTurnBtn" onclick="advanceTurn()"
+              class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm transition flex items-center gap-2 cursor-pointer ml-auto">
+              <span>Continue to Next Question</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SCREEN 3: EXECUTIVE PERFORMANCE DOSSIER (RANK, COLORED FEEDBACK BOXES, RETROSPECTIVE)
+         ======================================================================== -->
+    <section id="resultScreen" class="hidden max-w-5xl mx-auto w-full exec-panel rounded-2xl p-6 sm:p-9 space-y-8 animate-slide-up">
+      
+      <!-- Executive Rank & Score Banner -->
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+        <div class="flex items-start sm:items-center gap-4">
+          <div id="rankBadgeIcon" class="w-16 h-16 rounded-2xl bg-indigo-500/15 border border-indigo-500/45 flex items-center justify-center text-indigo-300 shrink-0 shadow-lg shadow-indigo-950/50">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded text-[11px] font-mono uppercase tracking-wider bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold">
+                OFFICIAL PANEL RANK
+              </span>
+              <span id="dossierPersonaTag" class="text-xs font-mono text-slate-400">• Principal Systems Architect Track</span>
+            </div>
+            <h2 id="finalRankTitle" class="text-2xl sm:text-3xl font-extrabold text-white mt-1 tracking-tight">
+              Fast-Track Finalist
+            </h2>
+            <p id="finalRankSubtitle" class="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
+              Demonstrated principal-caliber architectural judgment and executive poise under pressure.
+            </p>
+          </div>
+        </div>
+
+        <!-- HP, Skepticism & Score Summary Box -->
+        <div class="flex items-center gap-4 sm:gap-5 exec-subpanel px-5 py-4 rounded-2xl shrink-0 w-full md:w-auto justify-around md:justify-end">
+          <div class="text-center">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Final HP</div>
+            <div id="finalHpDisplay" class="text-xl sm:text-2xl font-bold text-emerald-400 font-mono mt-0.5">100</div>
+          </div>
+          <div class="h-9 w-px bg-slate-800"></div>
+          <div class="text-center">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Skepticism</div>
+            <div id="finalSkepticismDisplay" class="text-xl sm:text-2xl font-bold text-amber-400 font-mono mt-0.5">0%</div>
+          </div>
+          <div class="h-9 w-px bg-slate-800"></div>
+          <div class="text-center">
+            <div class="text-[10px] font-mono text-slate-400 uppercase">Score</div>
+            <div id="finalScoreDisplay" class="text-xl sm:text-2xl font-bold text-indigo-400 font-mono mt-0.5">1250</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISUAL SKILL BREAKDOWN & KEY METRICS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Competency Trait Bar Chart (7 Cols) -->
+        <div class="lg:col-span-7 exec-subpanel rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold">
+              Core Competency Breakdown
+            </h3>
+            <span class="text-[11px] font-mono text-slate-500">0 – 100% Scale</span>
+          </div>
+
+          <div class="space-y-4 pt-1">
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-slate-200">Technical Depth &amp; Systems Architecture</span>
+                <span id="traitTechPct" class="font-mono font-semibold text-indigo-400">85%</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                <div id="traitTechBar" class="h-full bg-indigo-500 rounded-full meter-transition" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-slate-200">Communication &amp; STAR Alignment</span>
+                <span id="traitCommPct" class="font-mono font-semibold text-amber-400">90%</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                <div id="traitCommBar" class="h-full bg-amber-500 rounded-full meter-transition" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-slate-200">Executive Composure (HP Retention)</span>
+                <span id="traitCompPct" class="font-mono font-semibold text-emerald-400">100%</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                <div id="traitCompBar" class="h-full bg-emerald-500 rounded-full meter-transition" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry Summary Grid (5 Cols) -->
+        <div class="lg:col-span-5 grid grid-cols-2 gap-3">
+          <div class="exec-subpanel rounded-xl p-4 flex flex-col justify-between">
+            <span class="text-[11px] font-mono text-slate-400 uppercase">Optimal Answers</span>
+            <span id="statOptimal" class="text-xl font-bold text-white font-mono mt-2">4 / 5</span>
+          </div>
+          <div class="exec-subpanel rounded-xl p-4 flex flex-col justify-between">
+            <span class="text-[11px] font-mono text-slate-400 uppercase">STAR Framework</span>
+            <span id="statStarUsed" class="text-sm font-bold text-amber-400 font-mono mt-2">Applied (+15 HP)</span>
+          </div>
+          <div class="exec-subpanel rounded-xl p-4 flex flex-col justify-between">
+            <span class="text-[11px] font-mono text-slate-400 uppercase">Peak Momentum</span>
+            <span id="statStreak" class="text-xl font-bold text-indigo-400 font-mono mt-2">3x</span>
+          </div>
+          <div class="exec-subpanel rounded-xl p-4 flex flex-col justify-between">
+            <span class="text-[11px] font-mono text-slate-400 uppercase">Skepticism Left</span>
+            <span id="statBossHp" class="text-xl font-bold text-slate-300 font-mono mt-2">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DISTINCT COLOR-CODED EXECUTIVE COACHING FEEDBACK BOXES -->
+      <div class="space-y-3.5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-mono uppercase tracking-wider text-indigo-300 font-semibold">
+            Executive Coaching &amp; Improvement Feedback (1 Card per Insight)
+          </h3>
+          <span class="text-[11px] font-mono text-slate-500">Tailored to Session Telemetry</span>
+        </div>
+        <div id="improvementTipsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Distinctly colored feedback boxes populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- CLICKABLE / EXPANDABLE ANSWER RETROSPECTIVE -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold">
+            Interactive Answer Retrospective (Click Any Round to Inspect)
+          </h3>
+          <span class="text-[11px] font-mono text-slate-500">Your Selection vs. Benchmark</span>
+        </div>
+        <div id="combatLogList" class="space-y-2.5">
+          <!-- Expandable retrospective cards populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Dossier Footer Actions -->
+      <div class="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
+        <p class="text-xs text-slate-400">
+          RPG BATTLE // NebulaScale Systems Automated Panel Evaluation Dossier
+        </p>
+        <button onclick="resetGame()"
+          class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition cursor-pointer">
+          Start New RPG Battle
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       2-SECOND BREATHING & COMPOSURE RESET OVERLAY (WHEN TOGGLE IS ON)
+       ======================================================================== -->
+  <div id="breathingOverlay" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+    <div class="exec-panel max-w-sm w-full rounded-2xl p-7 text-center space-y-5 border border-indigo-500/35 shadow-2xl animate-slide-up">
+      <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+        <svg class="w-full h-full -rotate-90" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="#1e293b" stroke-width="4" />
+          <circle id="breathingProgressRing" cx="40" cy="40" r="34" fill="none" stroke="#6366f1" stroke-width="4"
+            stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="0"
+            style="transition: stroke-dashoffset 2s linear;" />
+        </svg>
+        <span id="breathingCountdownText" class="absolute font-mono text-lg font-bold text-indigo-300">2s</span>
+      </div>
+      <div class="space-y-1.5">
+        <div class="text-[11px] font-mono uppercase tracking-widest text-indigo-400 font-semibold">
+          Pacing &amp; Regulation Reset
+        </div>
+        <p class="text-sm sm:text-base font-semibold text-white">
+          Pause. Inhale &amp; reset composure... 2s
+        </p>
+        <p class="text-xs text-slate-400">
+          Preparing next evaluation prompt
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       INTERACTIVE STAR METHOD HELPER MODAL (MINUTE 40 TWIST)
+       ======================================================================== -->
+  <div id="starModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm">
+    <div class="exec-panel w-full max-w-2xl rounded-2xl border border-slate-700/90 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slide-up">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="font-bold text-white text-sm sm:text-base">
+              STAR Response Builder
+            </h3>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              +15 HP BONUS
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Structure behavioral answers across Situation, Task, Action, and Result</p>
+        </div>
+        <button onclick="closeStarModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto space-y-4">
+        
+        <!-- Quick Sample Fill Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl exec-subpanel">
+          <span class="text-xs text-slate-300">
+            Load a calibrated engineering leadership example:
+          </span>
+          <button onclick="fillSampleStar()"
+            class="px-3 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/35 text-indigo-300 text-xs font-medium transition cursor-pointer">
+            Populate Sample Response
+          </button>
+        </div>
+
+        <!-- STAR Input Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div class="space-y-1.5">
+            <label class="flex items-center justify-between text-xs font-mono font-semibold text-slate-200">
+              <span><span class="text-indigo-400">S</span> — SITUATION</span>
+              <span id="countS" class="text-[10px] text-slate-500">0 chars</span>
+            </label>
+            <textarea id="starS" rows="3" oninput="updateStarScore()"
+              placeholder="Context: e.g., During our capstone sprint, checkout API latency spiked to 3.5s before demo day..."
+              class="w-full rounded-xl bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:outline-none p-3 text-xs text-slate-200 placeholder-slate-600 resize-none"></textarea>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="flex items-center justify-between text-xs font-mono font-semibold text-slate-200">
+              <span><span class="text-indigo-400">T</span> — TASK</span>
+              <span id="countT" class="text-[10px] text-slate-500">0 chars</span>
+            </label>
+            <textarea id="starT" rows="3" oninput="updateStarScore()"
+              placeholder="Objective: e.g., As backend owner, I needed to align the team on root-cause profiling vs. hardware scaling..."
+              class="w-full rounded-xl bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:outline-none p-3 text-xs text-slate-200 placeholder-slate-600 resize-none"></textarea>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="flex items-center justify-between text-xs font-mono font-semibold text-slate-200">
+              <span><span class="text-amber-400">A</span> — ACTION (Focus on "I")</span>
+              <span id="countA" class="text-[10px] text-slate-500">0 chars</span>
+            </label>
+            <textarea id="starA" rows="3" oninput="updateStarScore()"
+              placeholder="Execution: e.g., I ran EXPLAIN ANALYZE on slow queries, added a composite index, and added Redis caching..."
+              class="w-full rounded-xl bg-slate-950 border border-slate-800 focus:border-amber-500 focus:outline-none p-3 text-xs text-slate-200 placeholder-slate-600 resize-none"></textarea>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="flex items-center justify-between text-xs font-mono font-semibold text-slate-200">
+              <span><span class="text-emerald-400">R</span> — RESULT (Quantified)</span>
+              <span id="countR" class="text-[10px] text-slate-500">0 chars</span>
+            </label>
+            <textarea id="starR" rows="3" oninput="updateStarScore()"
+              placeholder="Impact: e.g., Reduced p95 latency by 84% (3.5s to 540ms) and delivered zero-downtime demo..."
+              class="w-full rounded-xl bg-slate-950 border border-slate-800 focus:border-emerald-500 focus:outline-none p-3 text-xs text-slate-200 placeholder-slate-600 resize-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Live STAR Readiness Meter -->
+        <div class="p-3.5 rounded-xl exec-subpanel space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400 font-medium">Framework Completeness:</span>
+            <span id="starReadinessLabel" class="font-mono font-semibold text-amber-400">0% — Complete all 4 pillars</span>
+          </div>
+          <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+            <div id="starReadinessBar" class="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-300" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3.5 bg-slate-900/95 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <button onclick="clearStarFields()" class="text-xs font-medium text-slate-400 hover:text-slate-200 cursor-pointer">
+          Clear Inputs
+        </button>
+        <div class="flex items-center gap-2.5">
+          <button onclick="closeStarModal()"
+            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition cursor-pointer">
+            Cancel
+          </button>
+          <button id="forgeStarBtn" onclick="applyStarResponse()"
+            class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs sm:text-sm transition cursor-pointer">
+            Apply STAR Framework (+15 HP)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- EXECUTIVE FOOTER -->
+  <footer class="w-full border-t border-slate-900 py-3.5 px-4 text-center text-xs text-slate-500">
+    RPG BATTLE // NebulaScale Systems Executive Engineering Simulation
+  </footer>
+
+  <!-- CORE APPLICATION LOGIC -->
+  <script>
+    /**
+     * ============================================================================
+     * 1. INTERVIEWER PERSONAS & SCENARIO DATA (With Prefixed Difficulty Timers)
+     * ============================================================================
+     */
+    const PERSONAS = {
+      architect: {
+        id: 'architect',
+        name: 'Julian Varek',
+        role: 'Principal Systems Architect',
+        badge: 'SYSTEMS TRACK',
+        badgeStyle: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+        introQuote: 'Show me production-grade architectural trade-offs and asymptotic clarity.'
+      },
+      manager: {
+        id: 'manager',
+        name: 'Marcus Vance',
+        role: 'Engineering Manager',
+        badge: 'LEADERSHIP TRACK',
+        badgeStyle: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+        introQuote: 'I evaluate ownership, calm incident communication, and structured STAR alignment.'
+      },
+      vp: {
+        id: 'vp',
+        name: 'David Thorne',
+        role: 'VP of Engineering',
+        badge: 'EXECUTIVE TRACK',
+        badgeStyle: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+        introQuote: 'Customer trust and high-velocity execution under pressure are non-negotiable.'
+      }
+    };
+
+    const ENCOUNTERS = [
+      {
+        id: 1,
+        phase: 1,
+        difficulty: "HARD",
+        timeLimit: 45,
+        category: "SYSTEM DESIGN & CACHING",
+        isBehavioral: false,
+        title: "Round 1: The Thundering Herd API Spike",
+        context: "SCENARIO: NebulaScale's dashboard endpoint `/api/v1/metrics` hits PostgreSQL directly. During peak traffic, 15,000 requests/sec saturate the DB CPU to 100%. How do you stabilize the architecture?",
+        bossQuote: "Databases don't forgive unthrottled spikes. How do you shield Postgres without stale data risks?",
+        options: [
+          {
+            label: "Implement a Redis cache-aside layer with short TTL + request coalescing (singleflight) so only one worker recomputes expired keys.",
+            quality: "optimal",
+            hpDelta: +10,
+            bossDamage: 25,
+            headline: "Strong Architectural Trade-Off Defense",
+            explanation: "Cache-aside absorbs read spikes cleanly, while singleflight/request coalescing prevents cache stampedes when a hot key expires—demonstrating production readiness."
+          },
+          {
+            label: "Increase the PostgreSQL connection pool limit from 100 to 10,000 so no incoming HTTP requests get rejected.",
+            quality: "suboptimal",
+            hpDelta: -20,
+            bossDamage: 5,
+            headline: "Connection Exhaustion Trade-Off",
+            explanation: "Opening 10,000 simultaneous DB connections triggers severe OS context-switching and memory thrashing, accelerating database collapse rather than absorbing load."
+          },
+          {
+            label: "Add an in-memory JavaScript object cache inside each stateless container without any eviction policy.",
+            quality: "partial",
+            hpDelta: -10,
+            bossDamage: 12,
+            headline: "Partial Mitigation (Unbounded Memory)",
+            explanation: "Local caching reduces DB reads initially, but omitting an LRU eviction policy or memory cap exposes containers to Out-Of-Memory (OOM) crashes under sustained traffic."
+          }
+        ]
+      },
+      {
+        id: 2,
+        phase: 1,
+        difficulty: "STANDARD",
+        timeLimit: 35,
+        category: "ALGORITHMS & COMPLEXITY",
+        isBehavioral: false,
+        title: "Round 2: The O(n²) Log Deduplicator",
+        context: "CODE REVIEW: An intern wrote a function comparing every incoming webhook event against an array of 500,000 processed IDs using `.includes()` inside a loop. Latency is 18 seconds.",
+        bossQuote: "Asymptotic complexity becomes real when production queues back up.",
+        options: [
+          {
+            label: "Replace the array lookup with a Hash Set (`Set` / Bloom filter + Redis SET) to achieve O(1) average lookup time.",
+            quality: "optimal",
+            hpDelta: +10,
+            bossDamage: 25,
+            headline: "Optimal O(1) Complexity Optimization",
+            explanation: "Replacing linear O(n) scans inside a loop with O(1) hash lookups reduces overall complexity from O(n²) to O(n), cutting 18 seconds down to milliseconds."
+          },
+          {
+            label: "Sort the array first with `Array.sort()` on every request and run binary search.",
+            quality: "partial",
+            hpDelta: -10,
+            bossDamage: 10,
+            headline: "Suboptimal Repeated Sorting Cost",
+            explanation: "Re-sorting 500,000 items on every incoming batch incurs O(n log n) overhead repeatedly when an O(1) Hash Set solves membership checks directly."
+          },
+          {
+            label: "Wrap the nested `.includes()` loop in `Promise.all()` so it executes asynchronously on the Node.js event loop.",
+            quality: "suboptimal",
+            hpDelta: -20,
+            bossDamage: 0,
+            headline: "Event Loop Blocking Misconception",
+            explanation: "`Promise.all()` coordinates I/O concurrency—it does not parallelize CPU-bound synchronous array scans on single-threaded JavaScript."
+          }
+        ]
+      },
+      {
+        id: 3,
+        phase: 1,
+        difficulty: "HARD",
+        timeLimit: 45,
+        category: "PRODUCTION DEBUGGING",
+        isBehavioral: false,
+        title: "Round 3: The Silent Checkout Failure",
+        context: "INCIDENT: After a Friday deploy, 12% of users report checkout timeouts, yet HTTP status metrics still show 99.9% 200 OK. What is your immediate triage move?",
+        bossQuote: "Green top-level dashboards often mask downstream failures. How do you isolate root cause?",
+        options: [
+          {
+            label: "Check distributed traces, inspect recent deploy diffs, verify downstream payment gateway latency, and prepare a safe rollback.",
+            quality: "optimal",
+            hpDelta: +10,
+            bossDamage: 20,
+            headline: "Disciplined Incident Triage",
+            explanation: "Correlating deploy diffs with distributed traces isolates swallowed exceptions or upstream timeouts while keeping rollback ready to protect customer transactions."
+          },
+          {
+            label: "SSH into the production container and hot-edit the minified JavaScript bundle to add `console.log` statements.",
+            quality: "suboptimal",
+            hpDelta: -25,
+            bossDamage: 0,
+            headline: "Configuration Drift & Audit Risk",
+            explanation: "Mutating live production containers manually bypasses CI/CD audit controls and disappears on autoscaling—rely on observability telemetry instead."
+          },
+          {
+            label: "Restart all Kubernetes pods immediately and wait until Monday morning to inspect logs.",
+            quality: "partial",
+            hpDelta: -10,
+            bossDamage: 10,
+            headline: "Temporary Mitigation Without Root Cause",
+            explanation: "A blind restart may clear stuck workers briefly, but deferring log and trace inspection leaves customers exposed to recurring 12% failures."
+          }
+        ]
+      },
+      {
+        id: 4,
+        phase: 2,
+        difficulty: "BEHAVIORAL",
+        timeLimit: 60,
+        category: "BEHAVIORAL ASSESSMENT // STAR",
+        isBehavioral: true,
+        title: "Round 4: Cross-Team Conflict & Ownership",
+        context: "BEHAVIORAL EVALUATION: \"Tell me about a time you disagreed with a teammate or mentor on a technical approach under a tight deadline. How did you handle it?\" (Use the STAR Helper!)",
+        bossQuote: "Structured clarity builds executive trust. Frame Situation, Task, Action, and Result.",
+        options: [
+          {
+            label: "Deliver a structured STAR story: acknowledge their concern, benchmark both options objectively, align on metrics, and ship on time.",
+            quality: "optimal",
+            hpDelta: +10,
+            bossDamage: 20,
+            headline: "Executive-Caliber STAR Framing",
+            explanation: "Backing technical disagreements with empirical benchmarks and empathy—structured via STAR—demonstrates high-trust engineering ownership."
+          },
+          {
+            label: "Explain that you knew your design was cleaner, so you quietly implemented it your way overnight to save meeting time.",
+            quality: "suboptimal",
+            hpDelta: -25,
+            bossDamage: 0,
+            headline: "Team Alignment & Trust Deficit",
+            explanation: "Unilateral implementation without peer consensus erodes team trust and introduces unreviewed maintenance risks."
+          },
+          {
+            label: "Give a brief, generic answer without metrics: \"We argued a bit, then compromised and finished the project.\"",
+            quality: "partial",
+            hpDelta: -12,
+            bossDamage: 8,
+            headline: "Vague Narrative Framing",
+            explanation: "Without specific individual Actions ('I') and quantified Results, interviewers cannot verify your impact. Open the STAR Helper to sharpen your story."
+          }
+        ]
+      },
+      {
+        id: 5,
+        phase: 3,
+        difficulty: "EXPERT",
+        timeLimit: 50,
+        category: "FINAL ARCHITECTURE REVIEW",
+        isBehavioral: false,
+        title: "Round 5: Idempotent Payment Processing",
+        context: "FINAL REVIEW: Mobile clients on flaky cellular networks retry `POST /api/v1/charge` twice, double-charging customers. How do you guarantee exactly-once billing?",
+        bossQuote: "Final architecture defense: protect customer transactions across unreliable networks.",
+        options: [
+          {
+            label: "Require a client-generated UUID `Idempotency-Key` header stored atomically in Redis/DB to return the cached result on duplicate retries.",
+            quality: "optimal",
+            hpDelta: +15,
+            bossDamage: 30,
+            headline: "Idempotency Architecture Verified",
+            explanation: "Atomic idempotency keys are the gold standard (used by Stripe/Adyen) to safely absorb network retries without duplicate billing side effects."
+          },
+          {
+            label: "Disable the 'Pay Now' button in the frontend UI with CSS `pointer-events: none` after the first click.",
+            quality: "partial",
+            hpDelta: -10,
+            bossDamage: 10,
+            headline: "Client-Side Only Guardrail",
+            explanation: "UI disabling helps prevent accidental double-clicks, but network-level retries, mobile proxies, or direct API calls bypass frontend CSS entirely."
+          },
+          {
+            label: "Reject any second request from the same User ID within 60 seconds with HTTP 429.",
+            quality: "suboptimal",
+            hpDelta: -20,
+            bossDamage: 5,
+            headline: "False-Positive Rate Limiting",
+            explanation: "Rate-limiting by User ID blocks legitimate back-to-back purchases while still double-charging if a retry arrives at second 61."
+          }
+        ]
+      }
+    ];
+
+    /**
+     * ============================================================================
+     * 2. APPLICATION STATE, TIMERS & AUDIO ENGINE
+     * ============================================================================
+     */
+    const state = {
+      selectedPersona: 'architect',
+      breathingEnabled: true,
+      currentTurn: 0,
+      playerHp: 100,
+      maxPlayerHp: 100,
+      bossHp: 100,
+      maxBossHp: 100,
+      score: 0,
+      streak: 0,
+      maxStreak: 0,
+      optimalCount: 0,
+      turnAnswered: false,
+      starForged: false,
+      starData: { s: "", t: "", a: "", r: "" },
+      history: [],
+      soundEnabled: true,
+      questionTimerInterval: null,
+      questionTimeRemaining: 45,
+      breathingTimeout: null
+    };
+
+    let audioCtx = null;
+    function playSfx(type) {
+      if (!state.soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'hit') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(660, now + 0.12);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+          osc.start(now);
+          osc.stop(now + 0.16);
+        } else if (type === 'damage') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.2);
+          gain.gain.setValueAtTime(0.09, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.start(now);
+          osc.stop(now + 0.22);
+        } else if (type === 'star') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+          osc.start(now);
+          osc.stop(now + 0.24);
+        } else if (type === 'victory') {
+          osc.type = 'sine';
+          [523.25, 659.25, 783.99].forEach((freq, idx) => {
+            osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+          });
+          gain.gain.setValueAtTime(0.09, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc.start(now);
+          osc.stop(now + 0.45);
+        }
+      } catch (e) {
+        // Ignore audio restrictions
+      }
+    }
+
+    function toggleAudio() {
+      state.soundEnabled = !state.soundEnabled;
+      const btn = document.getElementById('soundToggleBtn');
+      btn.innerHTML = state.soundEnabled
+        ? `<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" /></svg><span class="hidden md:inline">Audio: ON</span>`
+        : `<svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" /></svg><span class="hidden md:inline">Audio: OFF</span>`;
+    }
+
+    /**
+     * ============================================================================
+     * 3. PRE-INTERVIEW SETUP CONTROLS (PERSONA & BREATHING TOGGLE)
+     * ============================================================================
+     */
+    function selectPersona(personaKey) {
+      state.selectedPersona = personaKey;
+      ['architect', 'manager', 'vp'].forEach(key => {
+        const card = document.getElementById(`personaCard_${key}`);
+        const check = document.getElementById(`personaCheck_${key}`);
+        if (key === personaKey) {
+          card.className = 'text-left p-4 rounded-xl bg-indigo-950/35 border-2 border-indigo-500 transition-all cursor-pointer flex flex-col justify-between gap-2.5 shadow-md shadow-indigo-950/40';
+          check.className = 'w-4 h-4 rounded-full bg-indigo-500 text-white text-[10px] flex items-center justify-center font-bold';
+        } else {
+          card.className = 'text-left p-4 rounded-xl exec-subpanel hover:bg-slate-900/90 border border-slate-800 transition-all cursor-pointer flex flex-col justify-between gap-2.5';
+          check.className = 'w-4 h-4 rounded-full border border-slate-700 text-transparent text-[10px] flex items-center justify-center font-bold';
+        }
+      });
+      playSfx('hit');
+    }
+
+    function toggleBreathingPreference() {
+      const checkbox = document.getElementById('breathingToggleInput');
+      state.breathingEnabled = checkbox ? checkbox.checked : true;
+    }
+
+    function clearTimers() {
+      if (state.questionTimerInterval) {
+        clearInterval(state.questionTimerInterval);
+        state.questionTimerInterval = null;
+      }
+      if (state.breathingTimeout) {
+        clearTimeout(state.breathingTimeout);
+        state.breathingTimeout = null;
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 4. CORE SIMULATION FLOW, PREFIXED QUESTION TIMER & AUTO-ADVANCE
+     * ============================================================================
+     */
+    function startBattle() {
+      playSfx('hit');
+      toggleBreathingPreference();
+
+      const persona = PERSONAS[state.selectedPersona] || PERSONAS.architect;
+      document.getElementById('interviewerNameTitle').textContent = `${persona.name} • ${persona.role}`;
+      const trackBadge = document.getElementById('interviewerTrackBadge');
+      trackBadge.textContent = persona.badge;
+      trackBadge.className = `px-2 py-0.5 text-[10px] font-mono font-semibold rounded border ${persona.badgeStyle}`;
+
+      document.getElementById('introScreen').classList.add('hidden');
+      document.getElementById('resultScreen').classList.add('hidden');
+      const battleScreen = document.getElementById('battleScreen');
+      battleScreen.classList.remove('hidden');
+      battleScreen.classList.add('flex');
+      renderTurn();
+    }
+
+    function resetGame() {
+      clearTimers();
+      document.getElementById('breathingOverlay').classList.add('hidden');
+      document.getElementById('breathingOverlay').classList.remove('flex');
+
+      state.currentTurn = 0;
+      state.playerHp = 100;
+      state.bossHp = 100;
+      state.score = 0;
+      state.streak = 0;
+      state.maxStreak = 0;
+      state.optimalCount = 0;
+      state.turnAnswered = false;
+      state.starForged = false;
+      state.starData = { s: "", t: "", a: "", r: "" };
+      state.history = [];
+
+      clearStarFields();
+      updateHudMeters();
+
+      document.getElementById('resultScreen').classList.add('hidden');
+      document.getElementById('battleScreen').classList.add('hidden');
+      document.getElementById('battleScreen').classList.remove('flex');
+      document.getElementById('introScreen').classList.remove('hidden');
+    }
+
+    function updatePhaseStepper(activePhase) {
+      [1, 2, 3].forEach(phaseNum => {
+        const stepEl = document.getElementById(`phaseStep${phaseNum}`);
+        const dotEl = document.getElementById(`phaseDot${phaseNum}`);
+
+        stepEl.className = 'flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all ';
+        dotEl.className = 'w-5 h-5 rounded-full text-[11px] font-mono font-bold flex items-center justify-center shrink-0 ';
+
+        if (phaseNum < activePhase) {
+          stepEl.classList.add('bg-emerald-950/25', 'border-emerald-500/30', 'text-slate-200');
+          dotEl.classList.add('bg-emerald-500/20', 'text-emerald-300', 'border', 'border-emerald-500/40');
+          dotEl.textContent = '✓';
+        } else if (phaseNum === activePhase) {
+          stepEl.classList.add('bg-indigo-950/40', 'border-indigo-500/50', 'text-white', 'shadow-sm');
+          dotEl.classList.add('bg-indigo-600', 'text-white');
+          dotEl.textContent = phaseNum;
+        } else {
+          stepEl.classList.add('bg-slate-950/40', 'border-slate-800/80', 'text-slate-500');
+          dotEl.classList.add('bg-slate-900', 'text-slate-500', 'border', 'border-slate-800');
+          dotEl.textContent = phaseNum;
+        }
+      });
+    }
+
+    function startQuestionCountdown(seconds) {
+      clearTimers();
+      state.questionTimeRemaining = seconds;
+      updateTimerDisplay();
+
+      state.questionTimerInterval = setInterval(() => {
+        state.questionTimeRemaining--;
+        updateTimerDisplay();
+
+        if (state.questionTimeRemaining <= 0) {
+          clearTimers();
+          if (!state.turnAnswered) {
+            // Auto-submit timeout penalty and advance automatically to next question
+            handleTimeExpired();
+          } else {
+            // User already answered before time expired -> auto-shift to next question at 0s
+            advanceTurn();
+          }
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const timerText = document.getElementById('questionTimerText');
+      const timerBox = document.getElementById('timerBox');
+      if (!timerText || !timerBox) return;
+
+      timerText.textContent = `${Math.max(0, state.questionTimeRemaining)}s`;
+
+      if (state.questionTimeRemaining <= 10) {
+        timerBox.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-950/50 border border-rose-500/50 transition-colors';
+        timerText.className = 'font-mono text-sm font-bold text-rose-300';
+      } else if (state.questionTimeRemaining <= 20) {
+        timerBox.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/40 border border-amber-500/40 transition-colors';
+        timerText.className = 'font-mono text-sm font-bold text-amber-300';
+      } else {
+        timerBox.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-indigo-500/35 transition-colors';
+        timerText.className = 'font-mono text-sm font-bold text-white';
+      }
+    }
+
+    function handleTimeExpired() {
+      if (state.turnAnswered) return;
+      state.turnAnswered = true;
+
+      const q = ENCOUNTERS[state.currentTurn];
+      const optimalOpt = q.options.find(o => o.quality === 'optimal') || q.options[0];
+      const hpChange = -15;
+
+      state.playerHp = Math.max(5, state.playerHp + hpChange);
+      state.streak = 0;
+      playSfx('damage');
+
+      state.history.push({
+        turn: state.currentTurn + 1,
+        phase: q.phase,
+        category: q.category,
+        title: q.title,
+        chosenLabel: "Time Expired — No decision locked in before round clock reached 0s.",
+        benchmarkLabel: optimalOpt.label,
+        takeaway: optimalOpt.explanation,
+        quality: 'suboptimal',
+        hpChange,
+        starBonusApplied: false
+      });
+
+      updateHudMeters(hpChange, 0);
+      setInterviewerExpression('skeptical', 'Reaction: Time Expired');
+
+      // Automatically shift to the next question
+      advanceTurn();
+    }
+
+    function renderTurn() {
+      const q = ENCOUNTERS[state.currentTurn];
+      state.turnAnswered = false;
+
+      // Update 3-Phase Progressive Indicator
+      updatePhaseStepper(q.phase);
+
+      // Update Round Stepper Dots
+      const dotsEl = document.getElementById('turnDots');
+      dotsEl.innerHTML = ENCOUNTERS.map((enc, idx) => {
+        let colorClass = "bg-slate-800";
+        if (idx < state.currentTurn) colorClass = "bg-emerald-500";
+        else if (idx === state.currentTurn) colorClass = "bg-indigo-400 ring-2 ring-indigo-400/30";
+        return `<span class="w-2 h-2 rounded-full transition-all ${colorClass}"></span>`;
+      }).join('');
+
+      // Update Round Metadata & Difficulty Timer
+      document.getElementById('questionCategoryBadge').textContent = q.category;
+      document.getElementById('turnCounterText').textContent = `Round ${state.currentTurn + 1} of ${ENCOUNTERS.length}`;
+      document.getElementById('bossStatusText').textContent = `"${q.bossQuote}"`;
+
+      const diffBadge = document.getElementById('difficultyBadge');
+      diffBadge.textContent = `DIFFICULTY: ${q.difficulty} (${q.timeLimit}s)`;
+      if (q.difficulty === 'EXPERT' || q.difficulty === 'HARD') {
+        diffBadge.className = 'px-2.5 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30';
+      } else if (q.difficulty === 'BEHAVIORAL') {
+        diffBadge.className = 'px-2.5 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30';
+      } else {
+        diffBadge.className = 'px-2.5 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+      }
+
+      // Reset Interviewer Avatar to Analytical / Focused state
+      setInterviewerExpression('analytical', 'Status: Analytical');
+
+      // Show or Hide Body Language & Tone Check Pill (Behavioral Round + Toggle ON)
+      const postureBadge = document.getElementById('postureCheckBadge');
+      if (q.isBehavioral && state.breathingEnabled) {
+        postureBadge.classList.remove('hidden');
+      } else {
+        postureBadge.classList.add('hidden');
+      }
+
+      // Highlight STAR Helper button cleanly on Behavioral Round
+      const inlineStarBtn = document.getElementById('inlineStarBtn');
+      if (q.isBehavioral) {
+        inlineStarBtn.classList.add('ring-1', 'ring-amber-400/60', 'bg-amber-500/20');
+      } else {
+        inlineStarBtn.classList.remove('ring-1', 'ring-amber-400/60', 'bg-amber-500/20');
+      }
+
+      // Show STAR Equipped Banner if already crafted and on behavioral turn
+      const forgedBanner = document.getElementById('starForgedBanner');
+      if (state.starForged && q.isBehavioral) {
+        forgedBanner.classList.remove('hidden');
+        document.getElementById('starForgedSummary').textContent =
+          `[S] ${state.starData.s} • [T] ${state.starData.t} • [A] ${state.starData.a} • [R] ${state.starData.r}`;
+      } else {
+        forgedBanner.classList.add('hidden');
+      }
+
+      // Render Question & Context
+      document.getElementById('questionTitle').textContent = q.title;
+      document.getElementById('questionContextBox').textContent = q.context;
+
+      // Render Options
+      const optionsContainer = document.getElementById('optionsContainer');
+      const letters = ['A', 'B', 'C'];
+      optionsContainer.innerHTML = q.options.map((opt, index) => `
+        <button onclick="handleSelectOption(${index})" id="optBtn_${index}"
+          class="group w-full text-left p-4 rounded-xl bg-slate-950/70 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/50 transition-all flex items-start gap-3.5 cursor-pointer">
+          <span class="w-7 h-7 rounded-lg bg-slate-900 group-hover:bg-indigo-600 border border-slate-800 group-hover:border-indigo-500 text-slate-400 group-hover:text-white font-mono text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5 transition">
+            ${letters[index]}
+          </span>
+          <span class="text-xs sm:text-sm text-slate-200 group-hover:text-white leading-relaxed">
+            ${opt.label}
+          </span>
+        </button>
+      `).join('');
+
+      document.getElementById('feedbackPanel').classList.add('hidden');
+
+      // Start Prefixed Difficulty Countdown Timer
+      startQuestionCountdown(q.timeLimit);
+    }
+
+    function handleSelectOption(optionIndex) {
+      if (state.turnAnswered) return;
+      state.turnAnswered = true;
+
+      const q = ENCOUNTERS[state.currentTurn];
+      const chosen = q.options[optionIndex];
+      const optimalOpt = q.options.find(o => o.quality === 'optimal') || q.options[0];
+
+      // Calculate dynamic HP & Skepticism deltas
+      let hpChange = chosen.hpDelta;
+      let bossDmg = chosen.bossDamage;
+      let starBonusApplied = false;
+
+      if (q.isBehavioral && state.starForged && chosen.quality === 'optimal') {
+        hpChange += 15;
+        bossDmg += 10;
+        starBonusApplied = true;
+      }
+
+      state.playerHp = Math.max(5, Math.min(state.maxPlayerHp, state.playerHp + hpChange));
+      state.bossHp = Math.max(0, state.bossHp - bossDmg);
+
+      // Update Momentum & Score
+      if (chosen.quality === 'optimal') {
+        state.optimalCount++;
+        state.streak++;
+        state.maxStreak = Math.max(state.maxStreak, state.streak);
+        state.score += 200 + (state.streak * 25) + (starBonusApplied ? 150 : 0);
+        playSfx('hit');
+      } else if (chosen.quality === 'partial') {
+        state.streak = 0;
+        state.score += 75;
+        playSfx('damage');
+      } else {
+        state.streak = 0;
+        state.score = Math.max(0, state.score - 25);
+        playSfx('damage');
+      }
+
+      // Record History for Executive Dossier & Clickable Retrospective
+      state.history.push({
+        turn: state.currentTurn + 1,
+        phase: q.phase,
+        category: q.category,
+        title: q.title,
+        chosenLabel: chosen.label,
+        benchmarkLabel: optimalOpt.label,
+        takeaway: optimalOpt.explanation,
+        quality: chosen.quality,
+        hpChange,
+        starBonusApplied
+      });
+
+      // Style Decision Buttons
+      q.options.forEach((opt, idx) => {
+        const btn = document.getElementById(`optBtn_${idx}`);
+        btn.disabled = true;
+        btn.classList.remove('hover:bg-slate-900', 'hover:border-indigo-500/50', 'cursor-pointer');
+
+        if (idx === optionIndex) {
+          if (opt.quality === 'optimal') {
+            btn.classList.add('bg-emerald-950/35', 'border-emerald-500/70');
+          } else if (opt.quality === 'partial') {
+            btn.classList.add('bg-amber-950/30', 'border-amber-500/60');
+          } else {
+            btn.classList.add('bg-rose-950/35', 'border-rose-500/60');
+          }
+        } else if (opt.quality === 'optimal') {
+          btn.classList.add('border-emerald-500/35', 'opacity-80');
+        } else {
+          btn.classList.add('opacity-45');
+        }
+      });
+
+      // Update Wide HP Bar & Skepticism HUD
+      updateHudMeters(hpChange, bossDmg);
+
+      // Update Realistic Interviewer Portrait Expression & Micro-Caption
+      if (chosen.quality === 'optimal') {
+        const caption = starBonusApplied
+          ? 'Reaction: Impressed (STAR)'
+          : 'Reaction: Impressed by clarity';
+        setInterviewerExpression('impressed', caption);
+      } else if (chosen.quality === 'partial') {
+        setInterviewerExpression('skeptical', 'Reaction: Skeptical of gaps');
+      } else {
+        setInterviewerExpression('skeptical', 'Reaction: Critical of trade-off');
+      }
+
+      // Populate Calm, Authoritative Executive Feedback Panel
+      const fbPanel = document.getElementById('feedbackPanel');
+      const fbIcon = document.getElementById('feedbackIcon');
+      const fbHeadline = document.getElementById('feedbackHeadline');
+      const fbBadge = document.getElementById('feedbackDeltaBadge');
+      const fbExp = document.getElementById('feedbackExplanation');
+
+      fbPanel.className = 'rounded-xl p-4 sm:p-5 border transition-all space-y-4 animate-slide-up ';
+      if (chosen.quality === 'optimal') {
+        fbPanel.classList.add('bg-emerald-950/25', 'border-emerald-500/40');
+        fbIcon.className = 'w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5 font-mono text-sm font-bold';
+        fbIcon.textContent = '✓';
+        fbHeadline.textContent = starBonusApplied
+          ? `${chosen.headline} (+STAR Bonus Applied)`
+          : chosen.headline;
+        fbHeadline.className = 'font-semibold text-sm sm:text-base text-emerald-300';
+        fbBadge.className = 'px-2.5 py-0.5 rounded-md text-xs font-mono font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+        fbBadge.textContent = `+${hpChange} HP`;
+      } else if (chosen.quality === 'partial') {
+        fbPanel.classList.add('bg-amber-950/25', 'border-amber-500/40');
+        fbIcon.className = 'w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center justify-center shrink-0 mt-0.5 font-mono text-sm font-bold';
+        fbIcon.textContent = '!';
+        fbHeadline.textContent = chosen.headline;
+        fbHeadline.className = 'font-semibold text-sm sm:text-base text-amber-300';
+        fbBadge.className = 'px-2.5 py-0.5 rounded-md text-xs font-mono font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30';
+        fbBadge.textContent = `${hpChange} HP`;
+      } else {
+        fbPanel.className = 'rounded-xl p-4 sm:p-5 border transition-all space-y-4 animate-slide-up bg-rose-950/25 border-rose-500/40';
+        fbIcon.className = 'w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 flex items-center justify-center shrink-0 mt-0.5 font-mono text-sm font-bold';
+        fbIcon.textContent = '✕';
+        fbHeadline.textContent = chosen.headline;
+        fbHeadline.className = 'font-semibold text-sm sm:text-base text-rose-300';
+        fbBadge.className = 'px-2.5 py-0.5 rounded-md text-xs font-mono font-semibold bg-rose-500/15 text-rose-300 border border-rose-500/30';
+        fbBadge.textContent = `${hpChange} HP`;
+      }
+
+      fbExp.textContent = chosen.explanation;
+
+      const nextBtn = document.getElementById('nextTurnBtn');
+      const hintEl = document.getElementById('autoAdvanceHint');
+      if (state.currentTurn === ENCOUNTERS.length - 1) {
+        nextBtn.innerHTML = `<span>View Executive Dossier</span><span>→</span>`;
+        hintEl.textContent = `Auto-completing when timer reaches 0s, or view dossier now:`;
+      } else {
+        nextBtn.innerHTML = `<span>Continue to Next Question</span><span>→</span>`;
+        hintEl.textContent = `Auto-advancing at 0s, or continue early:`;
+      }
+    }
+
+    function updateHudMeters(hpChange = 0, bossDmg = 0) {
+      const playerHpBar = document.getElementById('playerHpBar');
+      const playerHpText = document.getElementById('playerHpText');
+      const playerStatus = document.getElementById('playerStatusText');
+      const playerCard = document.getElementById('playerCard');
+      const playerTrack = document.getElementById('playerMeterTrack');
+
+      playerHpBar.style.width = `${state.playerHp}%`;
+      playerHpText.textContent = `${state.playerHp} / ${state.maxPlayerHp} HP`;
+
+      // Smooth Executive Color Shifts: Emerald (>65) -> Amber (35-65) -> Crimson (<35)
+      playerHpBar.className = 'h-full rounded-full meter-transition ';
+      if (state.playerHp >= 65) {
+        playerHpBar.classList.add('bg-gradient-to-r', 'from-emerald-500', 'to-emerald-400');
+        playerStatus.textContent = "High executive poise. Strong technical authority.";
+      } else if (state.playerHp >= 35) {
+        playerHpBar.classList.add('bg-gradient-to-r', 'from-amber-500', 'to-amber-400');
+        playerStatus.textContent = "Moderate pressure. Anchor answers in explicit trade-offs.";
+      } else {
+        playerHpBar.classList.add('bg-gradient-to-r', 'from-rose-600', 'to-rose-500');
+        playerStatus.textContent = "Critical pressure. Regain HP with structured reasoning.";
+      }
+
+      // Update Skepticism Left Metric
+      const bossHpText = document.getElementById('bossHpText');
+      bossHpText.textContent = `${state.bossHp}%`;
+
+      // Momentum Badge
+      const comboBadge = document.getElementById('comboBadge');
+      if (state.streak >= 2) {
+        comboBadge.classList.remove('hidden');
+        comboBadge.textContent = `${state.streak}x MOMENTUM`;
+      } else {
+        comboBadge.classList.add('hidden');
+      }
+
+      // Subtle Meter Pulse & Delta Indicator
+      if (hpChange !== 0) {
+        const pPop = document.getElementById('playerDamagePopup');
+        pPop.textContent = hpChange > 0 ? `+${hpChange} HP` : `${hpChange} HP`;
+        pPop.className = `font-mono text-xs font-bold pointer-events-none animate-delta-fade ${hpChange > 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+        playerTrack.classList.remove('animate-meter-pulse');
+        void playerTrack.offsetWidth;
+        playerTrack.classList.add('animate-meter-pulse');
+
+        if (hpChange < 0) {
+          playerCard.classList.remove('animate-subtle-shake');
+          void playerCard.offsetWidth;
+          playerCard.classList.add('animate-subtle-shake');
+        }
+      }
+
+      if (bossDmg > 0) {
+        const bPop = document.getElementById('bossDamagePopup');
+        bPop.textContent = `-${bossDmg}% Skepticism`;
+        bPop.className = 'font-mono text-xs font-semibold text-indigo-300 pointer-events-none animate-delta-fade';
+      }
+    }
+
+    function advanceTurn() {
+      clearTimers();
+
+      if (state.currentTurn >= ENCOUNTERS.length - 1) {
+        showResultsScreen();
+        return;
+      }
+
+      const proceedToNextRound = () => {
+        state.currentTurn++;
+        renderTurn();
+      };
+
+      // If 2-Second Breathing & Pacing Toggle is ON, display calm 2s visual reset overlay
+      if (state.breathingEnabled) {
+        const overlay = document.getElementById('breathingOverlay');
+        const ring = document.getElementById('breathingProgressRing');
+        const countText = document.getElementById('breathingCountdownText');
+
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        countText.textContent = '2s';
+
+        // Reset SVG ring stroke-dashoffset
+        ring.style.transition = 'none';
+        ring.style.strokeDashoffset = '0';
+        void ring.offsetWidth;
+        ring.style.transition = 'stroke-dashoffset 2s linear';
+        ring.style.strokeDashoffset = '213.6';
+
+        setTimeout(() => {
+          if (countText) countText.textContent = '1s';
+        }, 1000);
+
+        state.breathingTimeout = setTimeout(() => {
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+          proceedToNextRound();
+        }, 2000);
+      } else {
+        // Bypass 2-second breathing transition when toggle is OFF
+        proceedToNextRound();
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 5. REALISTIC SVG PORTRAIT EXPRESSION CONTROLLER
+     * ============================================================================
+     */
+    function setInterviewerExpression(mode, captionText) {
+      const frame = document.getElementById('avatarFrame');
+      const ring = document.getElementById('avatarStatusRing');
+      const glowStop = document.getElementById('avatarGlowStop');
+      const headGroup = document.getElementById('avatarHeadGroup');
+      const browL = document.getElementById('avatarBrowLeft');
+      const browR = document.getElementById('avatarBrowRight');
+      const scleraL = document.getElementById('avatarScleraLeft');
+      const scleraR = document.getElementById('avatarScleraRight');
+      const lidL = document.getElementById('avatarLidLeft');
+      const lidR = document.getElementById('avatarLidRight');
+      const mouth = document.getElementById('avatarMouth');
+      const lipShade = document.getElementById('avatarLipShade');
+      const badge = document.getElementById('avatarReactionBadge');
+      const dot = document.getElementById('avatarReactionDot');
+      const text = document.getElementById('avatarReactionText');
+
+      if (!frame || !headGroup) return;
+
+      headGroup.classList.remove('animate-avatar-nod', 'animate-avatar-tilt', 'animate-avatar-listen');
+      frame.classList.remove('animate-ring-pulse-emerald', 'animate-ring-pulse-critical', 'animate-avatar-listen');
+      void headGroup.offsetWidth;
+
+      frame.className = 'relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-slate-950/90 border transition-all duration-500 ';
+      ring.className = 'absolute inset-0 w-full h-full animate-ring-spin pointer-events-none transition-colors duration-500 ';
+
+      if (mode === 'impressed') {
+        // Impressed / Approving (+HP Gain): Emerald pulse, approving nod, softened warm eyes, confident smile
+        frame.classList.add('border-emerald-400/80', 'shadow-[0_0_26px_-3px_rgba(16,185,129,0.6)]', 'animate-ring-pulse-emerald');
+        ring.classList.add('text-emerald-400/90');
+        glowStop.setAttribute('stop-color', '#10b981');
+        glowStop.setAttribute('stop-opacity', '0.32');
+
+        headGroup.classList.add('animate-avatar-nod');
+        browL.setAttribute('d', 'M42.8 41.6 Q48.5 39.8 54.0 41.8');
+        browR.setAttribute('d', 'M66.0 41.8 Q71.5 39.8 77.2 41.6');
+        scleraL.setAttribute('ry', '2.3');
+        scleraR.setAttribute('ry', '2.3');
+        lidL.setAttribute('d', 'M43.8 48.0 Q48.5 45.8 53.2 48.0');
+        lidR.setAttribute('d', 'M66.8 48.0 Q71.5 45.8 76.2 48.0');
+        mouth.setAttribute('d', 'M52.2 65.8 Q60 70.6 67.8 65.8');
+        lipShade.setAttribute('d', 'M55.0 69.2 Q60 71.2 65.0 69.2');
+
+        badge.className = 'mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 transition-all duration-300 text-center';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0';
+      } else if (mode === 'skeptical') {
+        // Skeptical / Critical (-HP Loss): Crimson/amber pulse, head tilt, asymmetric raised brow, narrowed gaze, tight skeptical mouth
+        frame.classList.add('border-rose-500/80', 'shadow-[0_0_26px_-3px_rgba(244,63,94,0.55)]', 'animate-ring-pulse-critical');
+        ring.classList.add('text-amber-400/90');
+        glowStop.setAttribute('stop-color', '#f43f5e');
+        glowStop.setAttribute('stop-opacity', '0.3');
+
+        headGroup.classList.add('animate-avatar-tilt');
+        browL.setAttribute('d', 'M42.8 44.6 Q48.5 44.2 54.0 45.2'); // furrowed left brow
+        browR.setAttribute('d', 'M66.0 42.4 Q71.5 39.2 77.2 41.2'); // sharply raised skeptical right brow
+        scleraL.setAttribute('ry', '1.85');
+        scleraR.setAttribute('ry', '2.05');
+        lidL.setAttribute('d', 'M43.8 47.4 Q48.5 46.8 53.2 47.4');
+        lidR.setAttribute('d', 'M66.8 47.6 Q71.5 46.4 76.2 47.6');
+        mouth.setAttribute('d', 'M53.2 67.5 Q59.5 65.4 66.8 67.8');
+        lipShade.setAttribute('d', 'M56.0 68.8 Q60 68.4 64.0 69.0');
+
+        badge.className = 'mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-medium bg-rose-500/15 text-rose-300 border border-rose-500/35 transition-all duration-300 text-center';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0';
+      } else if (mode === 'listening') {
+        // Active Listening (STAR Helper Open)
+        frame.classList.add('border-amber-400/75', 'shadow-[0_0_24px_-3px_rgba(251,191,36,0.5)]', 'animate-avatar-listen');
+        ring.classList.add('text-amber-300/90');
+        glowStop.setAttribute('stop-color', '#f59e0b');
+        glowStop.setAttribute('stop-opacity', '0.28');
+
+        headGroup.classList.add('animate-avatar-listen');
+        browL.setAttribute('d', 'M42.8 42.4 Q48.5 40.8 54.0 42.6');
+        browR.setAttribute('d', 'M66.0 42.6 Q71.5 40.8 77.2 42.4');
+        scleraL.setAttribute('ry', '2.8');
+        scleraR.setAttribute('ry', '2.8');
+        lidL.setAttribute('d', 'M43.8 48.2 Q48.5 44.8 53.2 48.2');
+        lidR.setAttribute('d', 'M66.8 48.2 Q71.5 44.8 76.2 48.2');
+        mouth.setAttribute('d', 'M53.5 66.4 Q60 67.6 66.5 66.4');
+        lipShade.setAttribute('d', 'M55.5 68.5 Q60 69.6 64.5 68.5');
+
+        badge.className = 'mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-medium bg-amber-500/15 text-amber-200 border border-amber-500/35 transition-all duration-300 text-center';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0';
+      } else {
+        // Neutral / Analytical (Default)
+        frame.classList.add('border-indigo-500/45', 'shadow-[0_0_22px_-4px_rgba(99,102,241,0.45)]');
+        ring.classList.add('text-indigo-400/75');
+        glowStop.setAttribute('stop-color', '#6366f1');
+        glowStop.setAttribute('stop-opacity', '0.25');
+
+        browL.setAttribute('d', 'M42.8 43.2 Q48.5 41.6 54.0 43.4');
+        browR.setAttribute('d', 'M66.0 43.4 Q71.5 41.6 77.2 43.2');
+        scleraL.setAttribute('ry', '2.7');
+        scleraR.setAttribute('ry', '2.7');
+        lidL.setAttribute('d', 'M43.8 48.2 Q48.5 45.2 53.2 48.2');
+        lidR.setAttribute('d', 'M66.8 48.2 Q71.5 45.2 76.2 48.2');
+        mouth.setAttribute('d', 'M53.0 66.5 Q60 66.8 67.0 66.5');
+        lipShade.setAttribute('d', 'M55.5 68.4 Q60 69.5 64.5 68.4');
+
+        badge.className = 'mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/25 transition-all duration-300 text-center';
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0';
+      }
+
+      if (captionText) {
+        text.textContent = captionText;
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 6. INTERACTIVE STAR METHOD HELPER MODAL (MINUTE 40 TWIST)
+     * ============================================================================
+     */
+    function openStarModal(autoJumpToBehavioral = false) {
+      playSfx('star');
+      if (autoJumpToBehavioral && !document.getElementById('battleScreen').classList.contains('hidden')) {
+        const behavioralIdx = ENCOUNTERS.findIndex(e => e.isBehavioral);
+        if (behavioralIdx !== -1 && state.currentTurn !== behavioralIdx) {
+          state.currentTurn = behavioralIdx;
+          renderTurn();
+        }
+      }
+
+      setInterviewerExpression('listening', 'Status: Active Listening');
+
+      const modal = document.getElementById('starModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      updateStarScore();
+    }
+
+    function closeStarModal() {
+      const modal = document.getElementById('starModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+
+      if (!state.turnAnswered) {
+        setInterviewerExpression(
+          'analytical',
+          state.starForged ? 'Status: STAR Ready' : 'Status: Analytical'
+        );
+      }
+    }
+
+    function fillSampleStar() {
+      document.getElementById('starS').value =
+        "During our senior capstone release, a senior teammate favored rewriting our REST API in GraphQL 48 hours before demo day while checkout latency was spiking at 3.2s.";
+      document.getElementById('starT').value =
+        "As backend lead, I needed to resolve the architectural disagreement constructively and stabilize p95 latency without missing our launch deadline.";
+      document.getElementById('starA').value =
+        "I ran k6 load benchmarks and PostgreSQL EXPLAIN ANALYZE on our slow endpoints, presented empirical data showing N+1 query bottlenecks, and proposed a targeted Redis cache + composite index now while scheduling GraphQL for v2.";
+      document.getElementById('starR').value =
+        "Cut p95 checkout latency by 83% (3.2s to 540ms), shipped on schedule with zero downtime, and earned full team alignment on our v2 roadmap.";
+      updateStarScore();
+      playSfx('star');
+    }
+
+    function clearStarFields() {
+      ['starS', 'starT', 'starA', 'starR'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      updateStarScore();
+    }
+
+    function updateStarScore() {
+      const fields = [
+        { id: 'starS', countId: 'countS' },
+        { id: 'starT', countId: 'countT' },
+        { id: 'starA', countId: 'countA' },
+        { id: 'starR', countId: 'countR' }
+      ];
+
+      let completed = 0;
+      fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        const countEl = document.getElementById(f.countId);
+        if (!el || !countEl) return;
+        const len = el.value.trim().length;
+        countEl.textContent = `${len} chars`;
+        if (len >= 15) completed++;
+      });
+
+      const pct = Math.round((completed / 4) * 100);
+      const bar = document.getElementById('starReadinessBar');
+      const label = document.getElementById('starReadinessLabel');
+      if (bar) bar.style.width = `${pct}%`;
+      if (label) {
+        label.textContent = pct === 100
+          ? "100% — Ready to Apply STAR Bonus"
+          : `${pct}% — Complete all 4 pillars (${completed}/4)`;
+        label.className = pct === 100
+          ? "font-mono font-semibold text-emerald-400"
+          : "font-mono font-semibold text-amber-400";
+      }
+    }
+
+    function applyStarResponse() {
+      const s = document.getElementById('starS').value.trim();
+      const t = document.getElementById('starT').value.trim();
+      const a = document.getElementById('starA').value.trim();
+      const r = document.getElementById('starR').value.trim();
+
+      state.starData = {
+        s: s || "Faced a high-priority architectural disagreement under a tight release deadline.",
+        t: t || "Owned the technical evaluation to align the team without delaying launch.",
+        a: a || "I benchmarked both approaches with production-like load data and documented trade-offs.",
+        r: r || "Reduced latency by 75% and shipped on schedule with full team buy-in."
+      };
+
+      state.starForged = true;
+      playSfx('star');
+      closeStarModal();
+
+      const q = ENCOUNTERS[state.currentTurn];
+      if (q && q.isBehavioral) {
+        const forgedBanner = document.getElementById('starForgedBanner');
+        forgedBanner.classList.remove('hidden');
+        document.getElementById('starForgedSummary').textContent =
+          `[S] ${state.starData.s} • [T] ${state.starData.t} • [A] ${state.starData.a} • [R] ${state.starData.r}`;
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 7. EXECUTIVE DEBRIEF SCREEN (RANK, DISTINCT COLORED FEEDBACK BOXES, RETROSPECTIVE)
+     * ============================================================================
+     */
+    function toggleRetrospective(index) {
+      const detailEl = document.getElementById(`retroDetail_${index}`);
+      const chevronEl = document.getElementById(`retroChevron_${index}`);
+      if (!detailEl) return;
+
+      const isHidden = detailEl.classList.contains('hidden');
+      if (isHidden) {
+        detailEl.classList.remove('hidden');
+        if (chevronEl) chevronEl.style.transform = 'rotate(180deg)';
+      } else {
+        detailEl.classList.add('hidden');
+        if (chevronEl) chevronEl.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function showResultsScreen() {
+      clearTimers();
+      playSfx('victory');
+      document.getElementById('battleScreen').classList.add('hidden');
+      document.getElementById('battleScreen').classList.remove('flex');
+      document.getElementById('resultScreen').classList.remove('hidden');
+
+      const persona = PERSONAS[state.selectedPersona] || PERSONAS.architect;
+      document.getElementById('dossierPersonaTag').textContent = `• ${persona.role} Track (${persona.name})`;
+
+      // Award Executive Panel Rank
+      let rankTitle = "";
+      let rankSubtitle = "";
+
+      if (state.playerHp >= 85 && state.optimalCount >= 4) {
+        rankTitle = "Rank S: Fast-Track Finalist // Offer Recommended";
+        rankSubtitle = "Demonstrated principal-caliber architectural judgment and executive poise across all evaluation phases.";
+      } else if (state.playerHp >= 60 && state.optimalCount >= 3) {
+        rankTitle = "Rank A: Qualified Internship Offer // Strong Hire";
+        rankSubtitle = "Solid systems reasoning and composed recovery under production incident pressure.";
+      } else if (state.playerHp >= 35) {
+        rankTitle = "Rank B: Waitlisted Contender // Calibration Advised";
+        rankSubtitle = "Completed the panel evaluation, though deeper architectural trade-off analysis is advised.";
+      } else {
+        rankTitle = "Rank C: Candidate Eliminated // Re-Apply Next Cycle";
+        rankSubtitle = "Significant HP loss under production stress. Review the targeted coaching cards below.";
+      }
+
+      document.getElementById('finalRankTitle').textContent = rankTitle;
+      document.getElementById('finalRankSubtitle').textContent = rankSubtitle;
+
+      document.getElementById('finalHpDisplay').textContent = `${state.playerHp}`;
+      document.getElementById('finalSkepticismDisplay').textContent = `${state.bossHp}%`;
+      document.getElementById('finalScoreDisplay').textContent = state.score;
+
+      document.getElementById('statOptimal').textContent = `${state.optimalCount} / ${ENCOUNTERS.length}`;
+      document.getElementById('statStarUsed').textContent = state.starForged ? "Applied (+15 HP)" : "Not Applied";
+      document.getElementById('statStreak').textContent = `${state.maxStreak}x`;
+      document.getElementById('statBossHp').textContent = `${state.bossHp}%`;
+
+      // Calculate Skill Breakdown Percentages
+      const techTurns = state.history.filter(h => !ENCOUNTERS[h.turn - 1].isBehavioral);
+      const techOptimal = techTurns.filter(h => h.quality === 'optimal').length;
+      const techPartial = techTurns.filter(h => h.quality === 'partial').length;
+      const techPct = Math.min(100, Math.round(((techOptimal * 1 + techPartial * 0.45) / Math.max(1, techTurns.length)) * 100));
+
+      const behavioralRecord = state.history.find(h => ENCOUNTERS[h.turn - 1].isBehavioral);
+      let commPct = 45;
+      if (behavioralRecord) {
+        if (behavioralRecord.quality === 'optimal') commPct = state.starForged ? 100 : 82;
+        else if (behavioralRecord.quality === 'partial') commPct = state.starForged ? 75 : 50;
+        else commPct = state.starForged ? 55 : 25;
+      }
+
+      const compPct = state.playerHp;
+
+      document.getElementById('traitTechPct').textContent = `${techPct}%`;
+      document.getElementById('traitCommPct').textContent = `${commPct}%`;
+      document.getElementById('traitCompPct').textContent = `${compPct}%`;
+
+      requestAnimationFrame(() => {
+        document.getElementById('traitTechBar').style.width = `${techPct}%`;
+        document.getElementById('traitCommBar').style.width = `${commPct}%`;
+        document.getElementById('traitCompBar').style.width = `${compPct}%`;
+      });
+
+      // Distinctly Colored Coaching Feedback Boxes (1 Box per Insight, High Contrast, Executive Palette)
+      const cardThemes = [
+        {
+          boxBg: 'bg-indigo-950/45 border-indigo-500/45',
+          badgeStyle: 'bg-indigo-500/20 text-indigo-200 border-indigo-400/40',
+          titleColor: 'text-indigo-100',
+          bodyColor: 'text-slate-200'
+        },
+        {
+          boxBg: 'bg-emerald-950/40 border-emerald-500/45',
+          badgeStyle: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40',
+          titleColor: 'text-emerald-100',
+          bodyColor: 'text-slate-200'
+        },
+        {
+          boxBg: 'bg-amber-950/35 border-amber-500/45',
+          badgeStyle: 'bg-amber-500/20 text-amber-200 border-amber-400/40',
+          titleColor: 'text-amber-100',
+          bodyColor: 'text-slate-200'
+        },
+        {
+          boxBg: 'bg-sky-950/40 border-sky-500/45',
+          badgeStyle: 'bg-sky-500/20 text-sky-200 border-sky-400/40',
+          titleColor: 'text-sky-100',
+          bodyColor: 'text-slate-200'
+        }
+      ];
+
+      const tips = [];
+
+      if (!state.starForged) {
+        tips.push({
+          tag: "FEEDBACK 01 • STAR STRUCTURE",
+          title: "Anchor Behavioral Answers in Quantified STAR Metrics",
+          body: "Close behavioral responses with concrete outcomes (e.g., 'cut p95 latency by 84%') rather than generalized summaries."
+        });
+      } else {
+        tips.push({
+          tag: "FEEDBACK 01 • COMMUNICATION STRENGTH",
+          title: "Maintain Concise Situation Framing",
+          body: "Your STAR framing is well-calibrated. In live executive panels, keep Situation/Task under 30 seconds so 70% of airtime highlights your Action and Result."
+        });
+      }
+
+      const missedRounds = state.history.filter(h => h.quality !== 'optimal');
+      if (missedRounds.length > 0) {
+        tips.push({
+          tag: "FEEDBACK 02 • ARCHITECTURE & TRADE-OFFS",
+          title: `Deepen Mastery: ${missedRounds[0].category}`,
+          body: "Before committing to an implementation fix, articulate trade-offs explicitly: latency vs. consistency, bounded memory (LRU), and safe rollback readiness."
+        });
+      } else {
+        tips.push({
+          tag: "FEEDBACK 02 • PRINCIPAL DIFFERENTIATOR",
+          title: "Proactively Surface Observability & Failure Modes",
+          body: "You achieved optimal marks across every round. Differentiate further by unprompted discussion of SLOs, alerting thresholds, and graceful degradation."
+        });
+      }
+
+      tips.push({
+        tag: "FEEDBACK 03 • DISTRIBUTED RESILIENCE",
+        title: "Design Mutating APIs for Idempotency",
+        body: "Assume mobile and distributed clients will retry requests: pair exponential backoff with atomic idempotency keys on financial or state-mutating endpoints."
+      });
+
+      tips.push({
+        tag: "FEEDBACK 04 • EXECUTIVE PACING",
+        title: "Clarify Constraints Before Optimizing",
+        body: "Establish QPS, dataset cardinality, and SLA targets early—senior panelists evaluate structured problem framing as heavily as the final solution."
+      });
+
+      document.getElementById('improvementTipsContainer').innerHTML = tips.slice(0, 4).map((tip, i) => {
+        const theme = cardThemes[i % cardThemes.length];
+        return `
+          <div class="p-4 sm:p-5 rounded-xl border ${theme.boxBg} space-y-2 shadow-md transition-all">
+            <span class="inline-block text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded border ${theme.badgeStyle}">
+              ${tip.tag}
+            </span>
+            <h4 class="font-bold text-sm sm:text-base ${theme.titleColor}">${tip.title}</h4>
+            <p class="text-xs sm:text-sm ${theme.bodyColor} leading-relaxed">${tip.body}</p>
+          </div>
+        `;
+      }).join('');
+
+      // Populate Clickable / Expandable Answer Retrospective
+      document.getElementById('combatLogList').innerHTML = state.history.map((item, idx) => {
+        const badgeColor = item.quality === 'optimal'
+          ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/25'
+          : item.quality === 'partial'
+            ? 'text-amber-300 bg-amber-500/10 border-amber-500/25'
+            : 'text-rose-300 bg-rose-500/10 border-rose-500/25';
+        const deltaStr = item.hpChange > 0 ? `+${item.hpChange} HP` : `${item.hpChange} HP`;
+        return `
+          <div class="rounded-xl exec-subpanel overflow-hidden border border-slate-800/90 hover:border-indigo-500/40 transition-colors">
+            <button type="button" onclick="toggleRetrospective(${idx})"
+              class="w-full p-3.5 flex items-center justify-between gap-3 text-left text-xs cursor-pointer">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-[10px] text-indigo-400 font-semibold">ROUND 0${item.turn}</span>
+                  <span class="font-semibold text-slate-100 truncate">${item.title}</span>
+                </div>
+                <div class="text-slate-400 truncate mt-0.5">${item.chosenLabel}</div>
+              </div>
+              <div class="flex items-center gap-2.5 shrink-0">
+                <span class="px-2.5 py-1 rounded-md font-mono font-semibold border ${badgeColor}">
+                  ${deltaStr}
+                </span>
+                <svg id="retroChevron_${idx}" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </div>
+            </button>
+
+            <!-- Expandable Strategic Comparison Drawer -->
+            <div id="retroDetail_${idx}" class="hidden px-4 pb-4 pt-2 border-t border-slate-800/80 bg-slate-950/70 space-y-2.5 text-xs">
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800">
+                <div class="text-[10px] font-mono uppercase text-slate-400 mb-1">Your Selection</div>
+                <p class="text-slate-200 leading-relaxed">${item.chosenLabel}</p>
+              </div>
+              <div class="p-3 rounded-lg bg-emerald-950/25 border border-emerald-500/30">
+                <div class="text-[10px] font-mono uppercase text-emerald-300 mb-1">Principal-Level Benchmark Answer</div>
+                <p class="text-emerald-100 leading-relaxed">${item.benchmarkLabel}</p>
+              </div>
+              <div class="text-slate-300 leading-relaxed">
+                <strong class="text-indigo-300 font-mono text-[11px]">STRATEGIC TAKEAWAY:</strong> ${item.takeaway}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
